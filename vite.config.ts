@@ -72,7 +72,7 @@ export default defineConfig({
   },
   // Define global constants for better error messages
   define: {
-    __API_BASE_URL__: JSON.stringify(process.env.VITE_API_URL || 'https://pb2-ahh9.onrender.com/api'),
+    __API_BASE_URL__: JSON.stringify(process.env.VITE_API_BASE_URL || 'https://pb2-ahh9.onrender.com/api'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 });
