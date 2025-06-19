@@ -272,6 +272,30 @@ class ApiService {
     }
   }
 
+  async getComments(id: string) {
+    try {
+      return await this.makeRequest(`${API_BASE_URL}/pastes/${id}/comments`);
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+      if (ENABLE_FALLBACK) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async getDiscussions(id: string) {
+    try {
+      return await this.makeRequest(`${API_BASE_URL}/pastes/${id}/discussions`);
+    } catch (error) {
+      console.error('Failed to fetch discussions:', error);
+      if (ENABLE_FALLBACK) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
   async downloadPaste(id: string) {
     const response = await fetch(`${API_BASE_URL}/pastes/${id}/download`, {
       headers: this.getAuthHeaders()
