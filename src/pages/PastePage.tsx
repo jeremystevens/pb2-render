@@ -2,18 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Eye, 
-  Star, 
-  GitFork, 
-  Copy, 
-  Download, 
-  Share2, 
+  Eye,
+  Star,
+  GitFork,
+  Copy,
+  Download,
+  Share2,
   Calendar,
   User,
   Code,
   Edit,
   Heart,
   MessageSquare,
+  FileText,
+  List,
+  Database,
   Shield,
   AlertTriangle,
   Key,
@@ -33,6 +36,7 @@ import {
 } from '../utils/crypto';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
+import { Comment, DiscussionThread } from '../types';
 
 interface PasteData {
   id: string;
@@ -49,6 +53,8 @@ interface PasteData {
   views: number;
   forks: number;
   stars: number;
+  likes?: number;
+  comments?: number;
   tags: string[];
   createdAt: string;
   updatedAt: string;
@@ -57,6 +63,22 @@ interface PasteData {
   isZeroKnowledge: boolean;
   version: number;
   versions: any[];
+}
+
+interface RelatedPaste {
+  paste: {
+    id: string;
+    title: string;
+    language: string;
+    author: {
+      username: string;
+      avatar?: string;
+    };
+    createdAt: string;
+    views: number;
+  };
+  relevanceScore: number;
+  reason: string;
 }
 
 export const PastePage: React.FC = () => {
@@ -70,6 +92,10 @@ export const PastePage: React.FC = () => {
   const [decryptionError, setDecryptionError] = useState<string | null>(null);
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [showAccessLink, setShowAccessLink] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'related' | 'comments' | 'discussions'>('overview');
+  const [relatedPastes, setRelatedPastes] = useState<RelatedPaste[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [threads, setThreads] = useState<DiscussionThread[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -91,6 +117,19 @@ export const PastePage: React.FC = () => {
     }
   }, [paste]);
 
+  useEffect(() => {
+    if (id) {
+      fetchRelated();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchComments();
+      fetchThreads();
+    }
+  }, [id]);
+
   const fetchPaste = async () => {
     if (!id) return;
     
@@ -105,6 +144,47 @@ export const PastePage: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Failed to load paste');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRelated = async () => {
+    if (!id) return;
+    try {
+      const data = await apiService.getRelatedPastes(id);
+      setRelatedPastes(data);
+    } catch (err) {
+      console.error('Error fetching related pastes:', err);
+    }
+  };
+
+  const fetchComments = async () => {
+    if (!id) return;
+    try {
+      const data: Comment[] = await apiService.getComments(id);
+      const map: Record<string, Comment[]> = {};
+      data.forEach((c) => {
+        if (c.parentId) {
+          if (!map[c.parentId]) map[c.parentId] = [];
+          map[c.parentId].push(c);
+        }
+      });
+      const roots = data.filter((c) => !c.parentId);
+      const attachReplies = (list: Comment[]) => {
+        return list.map((c) => ({ ...c, replies: attachReplies(map[c.id] || []) }));
+      };
+      setComments(attachReplies(roots));
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+    }
+  };
+
+  const fetchThreads = async () => {
+    if (!id) return;
+    try {
+      const data = await apiService.getDiscussions(id);
+      setThreads(data);
+    } catch (err) {
+      console.error('Error fetching discussions:', err);
     }
   };
 
@@ -225,6 +305,19 @@ export const PastePage: React.FC = () => {
     }
   };
 
+  const renderComment = (c: Comment, depth = 0): JSX.Element => (
+    <div key={c.id} style={{ marginLeft: depth * 16 }} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 mt-2">
+      <div className="flex items-center space-x-2 mb-2">
+        {c.author.avatar && <img src={c.author.avatar} className="h-6 w-6 rounded-full" />}
+        <span className="font-medium text-slate-900 dark:text-white">{c.author.username}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">{formatDistanceToNow(new Date(c.createdAt))} ago</span>
+        <button className="ml-auto text-xs text-red-500" onClick={() => toast('Reported')}>Report</button>
+      </div>
+      <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{c.content}</p>
+      {c.replies && c.replies.map(r => renderComment(r, depth + 1))}
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -264,6 +357,10 @@ export const PastePage: React.FC = () => {
 
   const displayContent = paste.isZeroKnowledge ? decryptedContent : paste.content;
   const canShowContent = !paste.isZeroKnowledge || (paste.isZeroKnowledge && decryptedContent);
+  const charCount = displayContent ? displayContent.length : 0;
+  const lineCount = displayContent ? displayContent.split('\n').length : 0;
+  const sizeBytes = new TextEncoder().encode(displayContent || '').length;
+  const sizeFormatted = sizeBytes < 1024 ? `${sizeBytes} B` : `${(sizeBytes / 1024).toFixed(1)} KB`;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
@@ -392,27 +489,41 @@ export const PastePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="flex items-center space-x-6 mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
-              <Eye className="h-4 w-4" />
-              <span>{paste.views} views</span>
+          {/* Statistics */}
+          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+            <h4 className="font-medium text-slate-900 dark:text-white mb-3">Statistics</h4>
+            <div className="flex flex-wrap items-center gap-4 text-slate-600 dark:text-slate-400">
+              <div className="flex items-center space-x-1">
+                <Eye className="h-4 w-4" />
+                <span>{paste.views}</span>
+                <span>Views</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Heart className="h-4 w-4" />
+                <span>{paste.likes ?? paste.stars}</span>
+                <span>Likes</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <FileText className="h-4 w-4" />
+                <span>{charCount}</span>
+                <span>Characters</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <List className="h-4 w-4" />
+                <span>{lineCount}</span>
+                <span>Lines</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Database className="h-4 w-4" />
+                <span>{sizeFormatted}</span>
+                <span>Size</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <MessageSquare className="h-4 w-4" />
+                <span>{comments.length}</span>
+                <span>Comments</span>
+              </div>
             </div>
-            
-            <button className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-yellow-500 transition-colors">
-              <Star className="h-4 w-4" />
-              <span>{paste.stars}</span>
-            </button>
-            
-            <button className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors">
-              <GitFork className="h-4 w-4" />
-              <span>{paste.forks}</span>
-            </button>
-            
-            <button className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors">
-              <Heart className="h-4 w-4" />
-              <span>Like</span>
-            </button>
           </div>
 
           {/* Tags */}
@@ -430,9 +541,67 @@ export const PastePage: React.FC = () => {
           )}
         </div>
 
-        {/* Zero-Knowledge Decryption Status */}
-        {paste.isZeroKnowledge && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <div className="border-b border-slate-200 dark:border-slate-700 mt-6">
+          <nav className="-mb-px flex space-x-4 text-sm font-medium" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`pb-2 border-b-2 ${
+                activeTab === 'overview'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              Overview
+            </button>
+            {relatedPastes.length > 0 && (
+              <button
+                onClick={() => setActiveTab('related')}
+                className={`pb-2 border-b-2 ${
+                  activeTab === 'related'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                } flex items-center space-x-1`}
+              >
+                <span>Related</span>
+                <span className="px-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs">
+                  {relatedPastes.length}
+                </span>
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('comments')}
+              className={`pb-2 border-b-2 ${
+                activeTab === 'comments'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              } flex items-center space-x-1`}
+            >
+              <span>Comments</span>
+              <span className="px-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs">
+                {comments.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('discussions')}
+              className={`pb-2 border-b-2 ${
+                activeTab === 'discussions'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              } flex items-center space-x-1`}
+            >
+              <span>Discussions</span>
+              <span className="px-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs">
+                {threads.length}
+              </span>
+            </button>
+          </nav>
+        </div>
+
+        {activeTab === 'overview' && (
+          <>
+            {/* Zero-Knowledge Decryption Status */}
+            {paste.isZeroKnowledge && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
             {isDecrypting ? (
               <div className="flex items-center space-x-3 text-blue-600 dark:text-blue-400">
                 <Loader className="h-5 w-5 animate-spin" />
@@ -525,6 +694,60 @@ export const PastePage: React.FC = () => {
             )}
           </div>
         </div>
+          </>
+        )}
+
+        {activeTab === 'related' && (
+          <div className="grid gap-4 mt-6">
+            {relatedPastes.map((rel) => (
+              <div
+                key={rel.paste.id}
+                className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between"
+              >
+                <div>
+                  <h3 className="font-medium text-slate-900 dark:text-white">
+                    {rel.paste.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {rel.paste.author.username}
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate(`/paste/${rel.paste.id}`)}
+                  className="text-indigo-600 hover:underline"
+                >
+                  View
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'comments' && (
+          <div className="space-y-4 mt-6">
+            {comments.length === 0 && (
+              <p className="text-slate-600 dark:text-slate-400">No comments yet.</p>
+            )}
+            {comments.map(c => renderComment(c))}
+          </div>
+        )}
+
+        {activeTab === 'discussions' && (
+          <div className="space-y-4 mt-6">
+            {threads.length === 0 && (
+              <p className="text-slate-600 dark:text-slate-400">No discussions yet.</p>
+            )}
+            {threads.map((t) => (
+              <div key={t.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-slate-900 dark:text-white">{t.title}</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{t.category} • {t.author.username}</p>
+                </div>
+                <span className="text-sm text-slate-500 dark:text-slate-400">{t.postCount} replies</span>
+              </div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );
