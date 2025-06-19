@@ -20,6 +20,8 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
+import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
+import 'prismjs/plugins/line-numbers/prism-line-numbers.js';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-python';
@@ -29,6 +31,20 @@ import 'prismjs/components/prism-html';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-sql';
 import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-cpp';
+import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-php';
+import 'prismjs/components/prism-ruby';
+import 'prismjs/components/prism-go';
+import 'prismjs/components/prism-rust';
+import 'prismjs/components/prism-scss';
+import 'prismjs/components/prism-powershell';
+import 'prismjs/components/prism-yaml';
+import 'prismjs/components/prism-xml';
+import 'prismjs/components/prism-markdown';
+import 'prismjs/components/prism-docker';
+import 'prismjs/components/prism-nginx';
+import 'prismjs/components/prism-apacheconf';
 import { apiService } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 
@@ -66,6 +82,35 @@ const ViewPastePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const sanitizeLanguage = (lang: string): string => {
+    const supported = [
+      'javascript',
+      'typescript',
+      'python',
+      'java',
+      'cpp',
+      'csharp',
+      'php',
+      'ruby',
+      'go',
+      'rust',
+      'html',
+      'css',
+      'scss',
+      'sql',
+      'bash',
+      'powershell',
+      'json',
+      'yaml',
+      'xml',
+      'markdown',
+      'dockerfile',
+      'nginx',
+      'apache',
+    ];
+    return supported.includes(lang) ? lang : 'javascript';
+  };
+
   useEffect(() => {
     if (id) {
       fetchPaste();
@@ -73,14 +118,11 @@ const ViewPastePage: React.FC = () => {
     }
   }, [id]);
 
+  const displayContent = paste?.content || '';
+
   useEffect(() => {
-    if (paste && paste.content) {
-      // Highlight code after paste is loaded
-      setTimeout(() => {
-        Prism.highlightAll();
-      }, 100);
-    }
-  }, [paste]);
+    Prism.highlightAll();
+  }, [displayContent]);
 
   const fetchPaste = async () => {
     try {
@@ -361,9 +403,9 @@ const ViewPastePage: React.FC = () => {
               </div>
               
               <div className="overflow-x-auto">
-                <pre className="!bg-transparent !m-0 !p-4">
-                  <code className={`language-${paste.syntax_language}`}>
-                    {paste.content}
+                <pre className={`!bg-transparent !m-0 !p-4 line-numbers language-${sanitizeLanguage(paste.syntax_language)}`}> 
+                  <code className={`language-${sanitizeLanguage(paste.syntax_language)}`}>
+                    {displayContent}
                   </code>
                 </pre>
               </div>

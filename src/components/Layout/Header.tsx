@@ -37,34 +37,36 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg group-hover:scale-110 transition-transform duration-200">
-              <Code2 className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              PasteForge
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/explore" className="flex items-center space-x-1 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-              <Compass className="h-4 w-4" />
-              <span>Explore</span>
+          <div className="flex items-center space-x-6">
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg group-hover:scale-110 transition-transform duration-200">
+                <Code2 className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                PasteForge
+              </span>
             </Link>
-            {isAuthenticated && (
-              <Link to="/projects" className="flex items-center space-x-1 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                <Folder className="h-4 w-4" />
-                <span>Projects</span>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link to="/explore" className="flex items-center space-x-1 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                <Compass className="h-4 w-4" />
+                <span>Explore</span>
               </Link>
-            )}
-          </nav>
+              {isAuthenticated && (
+                <Link to="/projects" className="flex items-center space-x-1 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  <Folder className="h-4 w-4" />
+                  <span>Projects</span>
+                </Link>
+              )}
+            </nav>
+          </div>
 
           {/* Search Bar */}
-          <div className="hidden lg:flex flex-1 max-w-lg mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+          <div className="hidden lg:flex flex-1 justify-center px-6">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
                 placeholder="Search pastes, projects, users..."
@@ -73,7 +75,6 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Theme Toggle */}
             <button
@@ -84,16 +85,15 @@ export const Header: React.FC = () => {
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
+            <Link
+              to="/create"
+              className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 rounded-md hover:shadow-lg transform hover:scale-105 transition-all text-sm font-medium"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create</span>
+            </Link>
             {isAuthenticated ? (
               <>
-                {/* Create Paste Button */}
-                <Link
-                  to="/create"
-                  className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Create</span>
-                </Link>
 
                 {/* Notifications */}
                 <Link to="/notifications" className="relative p-2 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
@@ -170,13 +170,13 @@ export const Header: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <Link
                   to="/login"
-                  className="text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  className="px-3 py-1.5 rounded-md text-sm font-medium text-indigo-600 border border-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 rounded-md hover:shadow-lg transform hover:scale-105 transition-all text-sm font-medium"
                 >
                   Sign Up
                 </Link>
@@ -222,26 +222,24 @@ export const Header: React.FC = () => {
                 </Link>
                 
                 {isAuthenticated && (
-                  <>
-                    <Link
-                      to="/projects"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center space-x-2 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400"
-                    >
-                      <Folder className="h-4 w-4" />
-                      <span>Projects</span>
-                    </Link>
-                    
-                    <Link
-                      to="/create"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg w-fit"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Create</span>
-                    </Link>
-                  </>
+                  <Link
+                    to="/projects"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-2 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  >
+                    <Folder className="h-4 w-4" />
+                    <span>Projects</span>
+                  </Link>
                 )}
+
+                <Link
+                  to="/create"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 rounded-md w-fit text-sm font-medium"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Create</span>
+                </Link>
 
                 {/* Theme Toggle in Mobile Menu */}
                 <button
