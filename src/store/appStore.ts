@@ -70,7 +70,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error instanceof Error) {
         if (error.message.includes('timeout') || error.message.includes('sleeping')) {
-          errorMessage = 'Server is starting up. Please wait a moment and try again.';
+          errorMessage = 'Server is waking up or unreachable. Please try again shortly.';
           backendStatus = 'sleeping';
           console.log('💤 Backend appears to be sleeping');
         } else if (error.message.includes('Network error')) {
@@ -122,7 +122,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error instanceof Error) {
         if (error.message.includes('timeout') || error.message.includes('sleeping')) {
-          errorMessage = 'Server is starting up. Please wait a moment and try again.';
+          errorMessage = 'Server is waking up or unreachable. Please try again shortly.';
           set({ backendStatus: 'sleeping' });
         } else if (error.message.includes('Network error')) {
           errorMessage = 'Connection failed. Please check your internet and try again.';
@@ -239,11 +239,17 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ backendStatus: 'healthy', apiError: null });
     } catch (error) {
       console.warn('Backend status check failed:', error);
-      
+
       if (error instanceof Error && error.message.includes('timeout')) {
-        set({ backendStatus: 'sleeping' });
+        set({
+          backendStatus: 'sleeping',
+          apiError: 'Server is waking up or unreachable. Please try again shortly.'
+        });
       } else {
-        set({ backendStatus: 'error' });
+        set({
+          backendStatus: 'error',
+          apiError: 'Server is waking up or unreachable. Please try again shortly.'
+        });
       }
     }
   },

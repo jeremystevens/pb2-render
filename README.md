@@ -43,11 +43,11 @@ npm run server
 ### Development (.env)
 ```env
 # Use production backend (default)
-VITE_API_URL=https://pb2-ahh9.onrender.com/api
+VITE_API_BASE_URL=https://pb2-ahh9.onrender.com/api
 
 # OR use local backend (requires local setup)
 VITE_USE_LOCAL_BACKEND=true
-VITE_API_URL=http://localhost:3001/api
+VITE_API_BASE_URL=http://localhost:3001/api
 
 # Local database (only needed for local backend)
 DATABASE_URL=postgresql://localhost:5432/pasteforge
@@ -56,7 +56,7 @@ JWT_SECRET=your-super-secret-jwt-key-here
 
 ### Production (.env.production)
 ```env
-VITE_API_URL=https://pb2-ahh9.onrender.com/api
+VITE_API_BASE_URL=https://pb2-ahh9.onrender.com/api
 ```
 
 ## 🌐 Deployment
@@ -105,7 +105,7 @@ If you see "ECONNREFUSED" errors:
 
 ### API Connection Issues
 - Check the browser console for API configuration logs
-- Verify the `VITE_API_URL` environment variable
+- Verify the `VITE_API_BASE_URL` environment variable
 - Ensure CORS is properly configured on the backend
 
 ### Local Backend Setup

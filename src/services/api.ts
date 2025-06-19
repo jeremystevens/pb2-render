@@ -1,11 +1,11 @@
 // Enhanced API service with robust error handling and fallbacks
 const getApiBaseUrl = () => {
   // Priority order for API URL determination:
-  // 1. Explicit VITE_API_URL from environment
+  // 1. Explicit VITE_API_BASE_URL from environment
   // 2. Environment-based defaults
   // 3. Hardcoded fallbacks
   
-  const envApiUrl = import.meta.env.VITE_API_URL;
+  const envApiUrl = import.meta.env.VITE_API_BASE_URL;
   
   if (envApiUrl) {
     console.log('🔧 Using API URL from environment:', envApiUrl);
@@ -127,7 +127,11 @@ class ApiService {
       return this.handleResponse(response);
       
     } catch (error) {
-      console.error(`❌ Request failed for ${url}:`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`❌ Request failed for ${url}:`, message);
+      if (error instanceof Error && error.stack) {
+        console.debug(error.stack);
+      }
       
       let apiError: ApiError;
       

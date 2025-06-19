@@ -3,6 +3,7 @@ import pool from '../database/connection.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
+const ENCRYPTED_PLACEHOLDER = '[ENCRYPTED]';
 
 // Get recent public pastes
 router.get('/recent', async (req, res) => {
@@ -304,33 +305,39 @@ router.post('/', async (req, res) => {
     }
     
     await client.query('BEGIN');
-    
+
+    const insertValues = [
+      title,
+      isZeroKnowledge ? ENCRYPTED_PLACEHOLDER : content,
+      language,
+      userId,
+      isZeroKnowledge ? false : isPrivate,
+      isZeroKnowledge,
+      isZeroKnowledge ? encryptedContent : null,
+      expiration ? new Date(expiration) : null
+    ];
+
+    console.log('Creating paste with values:', insertValues);
+
     // Insert paste
     const pasteResult = await client.query(`
       INSERT INTO pastes (
-        title, 
-        content, 
-        syntax_language, 
-        author_id, 
-        is_private, 
+        title,
+        content,
+        syntax_language,
+        author_id,
+        is_private,
         is_zero_knowledge,
         encrypted_content,
         expiration
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
-    `, [
-      title,
-      isZeroKnowledge ? null : content,
-      language,
-      userId, // Will be null for anonymous users
-      isZeroKnowledge ? false : isPrivate, // Zero-knowledge pastes are always unlisted (not private, not public)
-      isZeroKnowledge,
-      isZeroKnowledge ? encryptedContent : null,
-      expiration ? new Date(expiration) : null
-    ]);
+    `, insertValues);
     
     const paste = pasteResult.rows[0];
+
+    console.log('Inserted paste row:', paste);
     
     // Insert tags
     if (tags.length > 0) {

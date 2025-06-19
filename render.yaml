@@ -23,7 +23,7 @@ services:
         fromDatabase:
           name: pasteforge-db
           property: connectionString
-      - key: VITE_API_URL
+      - key: VITE_API_BASE_URL
         value: /api
     healthCheckPath: /api/health
 
