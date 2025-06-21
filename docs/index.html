@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PasteForge – The Smart, Secure Pastebin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --accent: #4fd1c5;
+      --text: #f5f5f5;
+      --text-muted: #a0aec0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      line-height: 1.6;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    header p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    section {
+      max-width: 900px;
+      margin: 3rem auto;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature {
+      background: #1a202c;
+      padding: 1.5rem;
+      border-radius: 8px;
+      transition: transform 0.2s ease;
+    }
+
+    .feature:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature h3 {
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 5rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .cta {
+      display: inline-block;
+      margin-top: 2rem;
+      background: var(--accent);
+      color: #000;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+
+    .cta:hover {
+      background: #38b2ac;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PasteForge</h1>
+    <p>The encrypted, intelligent pastebin built for developers</p>
+    <a class="cta" href="https://github.com/jeremystevens/pb2-render" target="_blank">View on GitHub</a>
+  </header>
+
+  <section>
+    <h2>✨ Features</h2>
+    <div class="features">
+      <div class="feature">
+        <h3>🔐 Zero-Knowledge Encryption</h3>
+        <p>Your content stays private – encrypted in-browser before it ever hits the server.</p>
+      </div>
+      <div class="feature">
+        <h3>🧠 AI Code Summaries</h3>
+        <p>AI-powered descriptions help you understand and explain pastes in seconds.</p>
+      </div>
+      <div class="feature">
+        <h3>📁 Project & Version Control</h3>
+        <p>Group, fork, and version your pastes like code repositories.</p>
+      </div>
+      <div class="feature">
+        <h3>💬 Collaboration Tools</h3>
+        <p>Commenting, discussion threads, and messaging built in.</p>
+      </div>
+      <div class="feature">
+        <h3>📈 Analytics</h3>
+        <p>See who's viewing your pastes, how often, and from where.</p>
+      </div>
+      <div class="feature">
+        <h3>🔗 Embed & Share</h3>
+        <p>PasteForge works beautifully inside your blog, docs, or codebase with live embeds.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 PasteForge. Built with privacy, performance, and purpose.
+  </footer>
+</body>
+</html>
