@@ -59,7 +59,8 @@ router.post('/register', async (req, res) => {
         pasteCount: 0,
         projectCount: 0,
         tagline: user.tagline,
-        avatar: user.profile_picture
+        avatar: user.profile_picture,
+        profilePicture: user.profile_picture
       },
       token
     });
@@ -118,6 +119,7 @@ router.post('/login', async (req, res) => {
         username: user.username,
         email: user.email,
         avatar: user.profile_picture || user.avatar_url,
+        profilePicture: user.profile_picture || null,
         bio: user.bio,
         tagline: user.tagline,
         website: user.website,
@@ -174,6 +176,7 @@ router.get('/verify', async (req, res) => {
         username: user.username,
         email: user.email,
         avatar: user.profile_picture || user.avatar_url,
+        profilePicture: user.profile_picture || null,
         bio: user.bio,
         tagline: user.tagline,
         website: user.website,

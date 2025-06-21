@@ -20,6 +20,8 @@ import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const defaultAvatar = '/default-avatar.png';
+
 export const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -100,22 +102,11 @@ export const Header: React.FC = () => {
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="flex items-center space-x-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
-                    {user?.profile_picture || user?.avatar ? (
-                      <img
-                        src={user.profile_picture || user.avatar}
-                        alt={user.username}
-                        className="h-8 w-8 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600"
-                      />
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="hidden sm:block text-sm font-medium text-slate-700 dark:text-slate-200">
-                          {user?.username}
-                        </span>
-                      </div>
-                    )}
+                    <img
+                      src={user?.profilePicture || user?.profile_picture || user?.avatar || defaultAvatar}
+                      alt={user?.username}
+                      className="h-8 w-8 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600"
+                    />
                   </button>
 
                   <AnimatePresence>

@@ -18,6 +18,8 @@ import {
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
 import { apiService } from '../services/api';
+
+const defaultAvatar = '/default-avatar.png';
 import { UserAchievements, Achievement } from '../components/Achievements/UserAchievements';
 import { PasteCard } from '../components/Paste/PasteCard';
 import { ProfileSummary as ProfileSummaryComponent } from '../components/Profile/ProfileSummary';
@@ -31,6 +33,7 @@ interface ProfileUser {
   email?: string;
   avatar?: string;
   profile_picture?: string;
+  profilePicture?: string;
   bio?: string;
   website?: string;
   location?: string;
@@ -78,6 +81,7 @@ export const ProfilePage: React.FC = () => {
           email: currentUser.email,
           avatar: currentUser.avatar,
           profile_picture: currentUser.profile_picture,
+          profilePicture: currentUser.profilePicture,
           bio: currentUser.bio,
           website: currentUser.website,
           location: currentUser.location,
@@ -119,6 +123,7 @@ export const ProfilePage: React.FC = () => {
               username: localUser.username,
               avatar: localUser.avatar,
               profile_picture: localUser.profile_picture,
+              profilePicture: localUser.profilePicture,
               bio: localUser.bio,
               website: localUser.website,
               location: localUser.location,
@@ -200,17 +205,11 @@ export const ProfilePage: React.FC = () => {
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-16">
               <div className="relative">
-                {profileUser.profile_picture || profileUser.avatar ? (
-                  <img
-                    src={profileUser.profile_picture || profileUser.avatar}
-                    alt={profileUser.username}
-                    className="w-32 h-32 rounded-full border-4 border-white dark:border-slate-800 object-cover"
-                  />
-                ) : (
-                  <div className="w-32 h-32 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full border-4 border-white dark:border-slate-800 flex items-center justify-center">
-                    <User className="h-16 w-16 text-white" />
-                  </div>
-                )}
+                <img
+                  src={profileUser.profilePicture || profileUser.profile_picture || profileUser.avatar || defaultAvatar}
+                  alt={profileUser.username}
+                  className="w-32 h-32 rounded-full border-4 border-white dark:border-slate-800 object-cover"
+                />
               </div>
               
               <div className="flex-1 mt-4 sm:mt-0">

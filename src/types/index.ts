@@ -3,7 +3,8 @@ export interface User {
   username: string;
   email: string;
   avatar?: string;
-  profile_picture?: string;
+  profile_picture?: string; // legacy field
+  profilePicture?: string;
   bio?: string;
   tagline?: string;
   website?: string;
