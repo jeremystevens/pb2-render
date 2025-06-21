@@ -14,11 +14,13 @@ const toBase64 = (file: File): Promise<string> => {
 
 export const EditProfile: React.FC = () => {
   const { user, updateProfile } = useAuthStore();
+  const defaultAvatar = '/default-avatar.png';
   const navigate = useNavigate();
   const [tagline, setTagline] = useState('');
   const [website, setWebsite] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [currentPicture, setCurrentPicture] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -27,6 +29,7 @@ export const EditProfile: React.FC = () => {
         const data = await apiService.getEditableProfile(user.id);
         setTagline(data.tagline || '');
         setWebsite(data.website || '');
+        setCurrentPicture(data.profilePicture || null);
       } catch (err) {
         console.error('Failed to load profile', err);
       }
@@ -56,6 +59,7 @@ export const EditProfile: React.FC = () => {
         website,
         avatar: result.profilePicture ?? user.avatar,
         profile_picture: result.profilePicture ?? user.profile_picture,
+        profilePicture: result.profilePicture ?? user.profilePicture,
       });
       navigate(`/profile/${user.username}`);
     } catch (err) {
@@ -67,9 +71,13 @@ export const EditProfile: React.FC = () => {
     <div className="edit-profile-card bg-slate-800 p-6 rounded-lg shadow-md max-w-md mx-auto mt-8 text-white">
       <h2 className="text-xl font-semibold mb-4">Edit Your Profile</h2>
 
-      {previewUrl && (
-        <div className="w-24 h-24 rounded-full overflow-hidden mb-4">
-          <img src={previewUrl} className="object-cover w-full h-full" alt="Profile preview" />
+      {(previewUrl || currentPicture) && (
+        <div className="w-24 h-24 rounded-full overflow-hidden mb-4 mx-auto">
+          <img
+            src={previewUrl || currentPicture || defaultAvatar}
+            className="object-cover w-full h-full"
+            alt="Current Avatar"
+          />
         </div>
       )}
 

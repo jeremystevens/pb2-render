@@ -85,17 +85,11 @@ export const SettingsPage: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center space-x-6">
                   <div className="relative">
-                    {user?.profile_picture || user?.avatar ? (
-                      <img
-                        src={user.profile_picture || user.avatar}
-                        alt={user.username}
-                        className="w-20 h-20 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <User className="h-8 w-8 text-white" />
-                      </div>
-                    )}
+                    <img
+                      src={user?.profilePicture || user?.profile_picture || user?.avatar || '/default-avatar.png'}
+                      alt={user?.username}
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
                     <button className="absolute bottom-0 right-0 p-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                       <Upload className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                     </button>

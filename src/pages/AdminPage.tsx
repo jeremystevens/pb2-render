@@ -26,6 +26,8 @@ import { useAppStore } from '../store/appStore';
 import { mockUsers } from '../data/mockData';
 import { formatDistanceToNow } from 'date-fns';
 
+const defaultAvatar = '/default-avatar.png';
+
 export const AdminPage: React.FC = () => {
   const { pastes, projects, issues, notifications } = useAppStore();
   const [activeTab, setActiveTab] = useState('overview');
@@ -146,17 +148,11 @@ export const AdminPage: React.FC = () => {
           <div className="space-y-4">
             {recentUsers.map(user => (
               <div key={user.id} className="flex items-center space-x-3">
-                {user.profile_picture || user.avatar ? (
-                  <img
-                    src={user.profile_picture || user.avatar}
-                    alt={user.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <Users className="h-5 w-5 text-white" />
-                  </div>
-                )}
+                <img
+                  src={user.profilePicture || user.profile_picture || user.avatar || defaultAvatar}
+                  alt={user.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
                 <div className="flex-1">
                   <div className="font-medium text-slate-900 dark:text-white">
                     {user.username}
@@ -251,17 +247,11 @@ export const AdminPage: React.FC = () => {
                 <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
-                      {user.profile_picture || user.avatar ? (
-                        <img
-                          src={user.profile_picture || user.avatar}
-                          alt={user.username}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <Users className="h-5 w-5 text-white" />
-                        </div>
-                      )}
+                      <img
+                        src={user.profilePicture || user.profile_picture || user.avatar || defaultAvatar}
+                        alt={user.username}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
                       <div>
                         <div className="font-medium text-slate-900 dark:text-white">
                           {user.username}

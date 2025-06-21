@@ -30,7 +30,8 @@ router.get('/:username', async (req, res) => {
     res.json({
       id: user.id.toString(),
       username: user.username,
-      avatar: user.avatar_url,
+      avatar: user.profile_picture || user.avatar_url,
+      profilePicture: user.profile_picture || user.avatar_url,
       bio: user.bio,
       website: user.website,
       location: user.location,
