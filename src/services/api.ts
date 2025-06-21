@@ -108,10 +108,10 @@ class ApiService {
       }, API_TIMEOUT);
       
       const isFormData = options.body instanceof FormData;
-      const headers = {
+      const headers: Record<string, string | undefined> = {
         ...this.getAuthHeaders(),
         ...options.headers
-      } as Record<string, any>;
+      };
       if (isFormData) {
         delete headers['Content-Type'];
       }
