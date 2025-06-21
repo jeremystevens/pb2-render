@@ -85,9 +85,9 @@ export const SettingsPage: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center space-x-6">
                   <div className="relative">
-                    {user?.avatar ? (
+                    {user?.profile_picture || user?.avatar ? (
                       <img
-                        src={user.avatar}
+                        src={user.profile_picture || user.avatar}
                         alt={user.username}
                         className="w-20 h-20 rounded-full object-cover"
                       />

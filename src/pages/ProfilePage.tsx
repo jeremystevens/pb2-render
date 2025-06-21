@@ -30,6 +30,7 @@ interface ProfileUser {
   username: string;
   email?: string;
   avatar?: string;
+  profile_picture?: string;
   bio?: string;
   website?: string;
   location?: string;
@@ -76,6 +77,7 @@ export const ProfilePage: React.FC = () => {
           username: currentUser.username,
           email: currentUser.email,
           avatar: currentUser.avatar,
+          profile_picture: currentUser.profile_picture,
           bio: currentUser.bio,
           website: currentUser.website,
           location: currentUser.location,
@@ -116,6 +118,7 @@ export const ProfilePage: React.FC = () => {
               id: localUser.id,
               username: localUser.username,
               avatar: localUser.avatar,
+              profile_picture: localUser.profile_picture,
               bio: localUser.bio,
               website: localUser.website,
               location: localUser.location,
@@ -197,9 +200,9 @@ export const ProfilePage: React.FC = () => {
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-16">
               <div className="relative">
-                {profileUser.avatar ? (
+                {profileUser.profile_picture || profileUser.avatar ? (
                   <img
-                    src={profileUser.avatar}
+                    src={profileUser.profile_picture || profileUser.avatar}
                     alt={profileUser.username}
                     className="w-32 h-32 rounded-full border-4 border-white dark:border-slate-800 object-cover"
                   />
