@@ -20,10 +20,16 @@ import { useAuthStore } from '../store/authStore';
 import { apiService } from '../services/api';
 
 const defaultAvatar = '/default-avatar.png';
-import { UserAchievements, Achievement } from '../components/Achievements/UserAchievements';
 import { PasteCard } from '../components/Paste/PasteCard';
 import { ProfileSummary as ProfileSummaryComponent } from '../components/Profile/ProfileSummary';
-import { ProfileSummary } from '../types';
+import { ProfileSummary, Collection } from '../types';
+import { Achievement } from '../components/Achievements/UserAchievements';
+const UserAchievements = React.lazy(() =>
+  import('../components/Achievements/UserAchievements').then(mod => ({ default: mod.UserAchievements }))
+);
+const CollectionsList = React.lazy(() =>
+  import('../components/Profile/CollectionsList').then(mod => ({ default: mod.CollectionsList }))
+);
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 
@@ -56,6 +62,14 @@ export const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [profileSummary, setProfileSummary] = useState<ProfileSummary | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'collections' | 'pastes'>('overview');
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: User },
+    { id: 'achievements', label: 'Achievements', icon: Star },
+    { id: 'collections', label: 'Collections', icon: Folder },
+    { id: 'pastes', label: 'Recent Pastes', icon: Code }
+  ];
   
   const isOwnProfile = currentUser?.username === username;
 
@@ -96,6 +110,8 @@ export const ProfilePage: React.FC = () => {
         // Get user's pastes from the store (filtered by username)
         const filteredPastes = pastes.filter(p => p.author.username === username && p.isPublic);
         setUserPastes(filteredPastes);
+        const userCollections = await apiService.getUserCollections(currentUser.id);
+        setCollections(userCollections);
         const ach = await apiService.getUserAchievements(currentUser.id);
         setAchievements(ach);
         const summary = await apiService.getProfileSummary(currentUser.id);
@@ -107,9 +123,10 @@ export const ProfilePage: React.FC = () => {
           setProfileUser(userData);
           
           // Fetch user's pastes
-          const userPastesData = await apiService.getUserPastes(username);
-          setUserPastes(userPastesData);
-          const ach = await apiService.getUserAchievements(userData.id);
+        const userPastesData = await apiService.getUserPastes(username);
+        setUserPastes(userPastesData);
+        resetCollectionsState();
+        const ach = await apiService.getUserAchievements(userData.id);
           setAchievements(ach);
           const summary = await apiService.getProfileSummary(userData.id);
           setProfileSummary(summary);
@@ -137,6 +154,7 @@ export const ProfilePage: React.FC = () => {
             
           const filteredPastes = pastes.filter(p => p.author.username === username && p.isPublic);
           setUserPastes(filteredPastes);
+          setCollections([]);
           const ach = await apiService.getUserAchievements(localUser.id);
           setAchievements(ach);
           const summary = await apiService.getProfileSummary(localUser.id);
@@ -152,6 +170,66 @@ export const ProfilePage: React.FC = () => {
       toast.error('Failed to load user profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.followers}</div>
+                <div className="text-slate-600 dark:text-slate-400 text-sm">Followers</div>
+              </div>
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.following}</div>
+                <div className="text-slate-600 dark:text-slate-400 text-sm">Following</div>
+              </div>
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.pasteCount}</div>
+                <div className="text-slate-600 dark:text-slate-400 text-sm">Pastes</div>
+              </div>
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.projectCount}</div>
+                <div className="text-slate-600 dark:text-slate-400 text-sm">Projects</div>
+              </div>
+            </div>
+            <ProfileSummaryComponent summary={profileSummary} />
+          </div>
+        );
+      case 'achievements':
+        return (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <UserAchievements achievements={achievements} />
+          </React.Suspense>
+        );
+      case 'collections':
+        return (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <CollectionsList collections={collections} />
+          </React.Suspense>
+        );
+      case 'pastes':
+      default:
+        return userPastes.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {userPastes.map((paste, index) => (
+              <motion.div key={paste.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
+                <PasteCard paste={paste} />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Code className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No public pastes yet</h3>
+            <p className="text-slate-600 dark:text-slate-400">
+              {isOwnProfile ? 'Create your first paste to get started' : `${profileUser.username} hasn't shared any public pastes yet`}
+            </p>
+          </div>
+        );
     }
   };
 
@@ -278,141 +356,30 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-              {profileUser.followers}
-            </div>
-            <div className="text-slate-600 dark:text-slate-400 text-sm">
-              Followers
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-              {profileUser.following}
-            </div>
-            <div className="text-slate-600 dark:text-slate-400 text-sm">
-              Following
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-              {profileUser.pasteCount}
-            </div>
-            <div className="text-slate-600 dark:text-slate-400 text-sm">
-              Pastes
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-              {profileUser.projectCount}
-            </div>
-            <div className="text-slate-600 dark:text-slate-400 text-sm">
-              Projects
-            </div>
-          </div>
-        </div>
-
-        {/* Profile Summary */}
-        <ProfileSummaryComponent summary={profileSummary} />
-
-        {/* Content Tabs */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center space-x-8 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <button className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 pb-4 -mb-4">
-              <Code className="h-4 w-4" />
-              <span>Pastes</span>
-              <span className="bg-indigo-100 dark:bg-indigo-900/30 px-2 py-1 rounded-full text-xs">
-                {userPastes.length}
-              </span>
-            </button>
-            
-            <button className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
-              <Folder className="h-4 w-4" />
-              <span>Projects</span>
-              <span className="bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded-full text-xs">
-                {profileUser.projectCount}
-              </span>
-            </button>
-          </div>
-
-          <div className="p-6">
-            {userPastes.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userPastes.slice(0, 6).map((paste, index) => (
-                  <motion.div
-                    key={paste.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <PasteCard paste={paste} />
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Code className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-                  No public pastes yet
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  {isOwnProfile 
-                    ? "Create your first paste to get started" 
-                    : `${profileUser.username} hasn't shared any public pastes yet`
-                  }
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Achievements */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-          <UserAchievements achievements={achievements} />
-        </div>
-
-        {/* Activity Graph Placeholder */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
-            Contribution Activity
-          </h3>
-          
-          <div className="grid grid-cols-12 gap-1">
-            {Array.from({ length: 365 }, (_, i) => (
-              <div
-                key={i}
-                className={`w-3 h-3 rounded-sm ${
-                  Math.random() > 0.7 
-                    ? 'bg-green-500' 
-                    : Math.random() > 0.5 
-                    ? 'bg-green-300' 
-                    : 'bg-slate-200 dark:bg-slate-700'
+        {/* Tabs */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 mt-8">
+          <div className="flex overflow-x-auto space-x-6 px-6 border-b border-slate-200 dark:border-slate-700">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center py-4 text-sm whitespace-nowrap transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-indigo-600 border-b-2 border-indigo-600'
+                    : 'text-slate-600 hover:text-slate-900 dark:hover:text-slate-300'
                 }`}
-                title={`Activity on day ${i + 1}`}
-              />
+              >
+                <tab.icon className="h-4 w-4 mr-2" />
+                {tab.label}
+              </button>
             ))}
           </div>
-          
-          <div className="flex items-center justify-between mt-4 text-sm text-slate-600 dark:text-slate-400">
-            <span>Less</span>
-            <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-slate-200 dark:bg-slate-700 rounded-sm"></div>
-              <div className="w-3 h-3 bg-green-200 dark:bg-green-800 rounded-sm"></div>
-              <div className="w-3 h-3 bg-green-300 dark:bg-green-600 rounded-sm"></div>
-              <div className="w-3 h-3 bg-green-400 dark:bg-green-500 rounded-sm"></div>
-              <div className="w-3 h-3 bg-green-500 dark:bg-green-400 rounded-sm"></div>
-            </div>
-            <span>More</span>
-          </div>
+          <div className="p-6">{renderTabContent()}</div>
         </div>
+
       </motion.div>
     </div>
   );
