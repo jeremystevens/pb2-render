@@ -125,7 +125,7 @@ export const ProfilePage: React.FC = () => {
           // Fetch user's pastes
         const userPastesData = await apiService.getUserPastes(username);
         setUserPastes(userPastesData);
-        setCollections([]);
+        resetCollectionsState();
         const ach = await apiService.getUserAchievements(userData.id);
           setAchievements(ach);
           const summary = await apiService.getProfileSummary(userData.id);
