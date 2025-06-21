@@ -31,7 +31,7 @@ router.get('/:username', async (req, res) => {
       id: user.id.toString(),
       username: user.username,
       avatar: user.profile_picture || user.avatar_url,
-      profilePicture: user.profile_picture || null,
+      profilePicture: user.profile_picture || user.avatar_url,
       bio: user.bio,
       website: user.website,
       location: user.location,
