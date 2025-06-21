@@ -3,15 +3,6 @@ import { useAuthStore } from '../store/authStore';
 import { apiService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
-const toBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
-
 export const EditProfile: React.FC = () => {
   const { user, updateProfile } = useAuthStore();
   const defaultAvatar = '/default-avatar.png';
@@ -48,12 +39,14 @@ export const EditProfile: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    let profilePicture;
+    const formData = new FormData();
+    formData.append('tagline', tagline);
+    formData.append('website', website);
     if (file) {
-      profilePicture = await toBase64(file);
+      formData.append('avatar', file);
     }
     try {
-      const result = await apiService.updateProfile(user.id, { tagline, website, profilePicture });
+      const result = await apiService.updateProfile(user.id, formData);
       updateProfile({
         tagline,
         website,
