@@ -110,7 +110,8 @@ export const ProfilePage: React.FC = () => {
         // Get user's pastes from the store (filtered by username)
         const filteredPastes = pastes.filter(p => p.author.username === username && p.isPublic);
         setUserPastes(filteredPastes);
-        setCollections([]);
+        const userCollections = await apiService.getUserCollections(currentUser.id);
+        setCollections(userCollections);
         const ach = await apiService.getUserAchievements(currentUser.id);
         setAchievements(ach);
         const summary = await apiService.getProfileSummary(currentUser.id);
