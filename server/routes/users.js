@@ -106,6 +106,34 @@ router.get('/:username/pastes', async (req, res) => {
   }
 });
 
+// Get collections created by a user by user ID
+router.get('/:userId/collections', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT id, name, description, is_public, created_at, updated_at
+       FROM collections WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    const collections = result.rows.map(row => ({
+      id: row.id.toString(),
+      name: row.name,
+      description: row.description,
+      author: { id: userId },
+      pastes: [],
+      isPublic: row.is_public,
+      createdAt: row.created_at.toISOString(),
+      updatedAt: row.updated_at.toISOString(),
+    }));
+
+    res.json(collections);
+  } catch (err) {
+    console.error('Error fetching user collections:', err);
+    res.status(500).json({ error: 'Failed to fetch user collections' });
+  }
+});
+
 // Profile summary for user by ID
 router.get('/:userId/profile-summary', async (req, res) => {
   try {

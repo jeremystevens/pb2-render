@@ -172,6 +172,29 @@ export async function initializeDatabase() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `);
+
+    // Create collections tables for organizing pastes
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS collections (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        is_public BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS collection_pastes (
+        id SERIAL PRIMARY KEY,
+        collection_id INTEGER REFERENCES collections(id) ON DELETE CASCADE,
+        paste_id INTEGER REFERENCES pastes(id) ON DELETE CASCADE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(collection_id, paste_id)
+      )
+    `);
     
     // Create ai_summaries table
     await client.query(`
