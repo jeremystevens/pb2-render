@@ -318,6 +318,10 @@ class ApiService {
     return this.makeRequest(`${API_BASE_URL}/users/${userId}/achievements`);
   }
 
+  async getUserCollections(userId: string) {
+    return this.makeRequest(`${API_BASE_URL}/users/${userId}/collections`);
+  }
+
   async getProfileSummary(userId: string) {
     return this.makeRequest(`${API_BASE_URL}/users/${userId}/profile-summary`);
   }

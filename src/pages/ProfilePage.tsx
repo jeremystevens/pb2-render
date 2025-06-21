@@ -73,6 +73,10 @@ export const ProfilePage: React.FC = () => {
   
   const isOwnProfile = currentUser?.username === username;
 
+  const resetCollectionsState = () => {
+    setCollections([]);
+  };
+
   useEffect(() => {
     if (username) {
       fetchUserProfile();
@@ -111,7 +115,7 @@ export const ProfilePage: React.FC = () => {
         const filteredPastes = pastes.filter(p => p.author.username === username && p.isPublic);
         setUserPastes(filteredPastes);
         const userCollections = await apiService.getUserCollections(currentUser.id);
-        setCollections(userCollections);
+        setCollections(userCollections || []);
         const ach = await apiService.getUserAchievements(currentUser.id);
         setAchievements(ach);
         const summary = await apiService.getProfileSummary(currentUser.id);
