@@ -146,9 +146,9 @@ export const AdminPage: React.FC = () => {
           <div className="space-y-4">
             {recentUsers.map(user => (
               <div key={user.id} className="flex items-center space-x-3">
-                {user.avatar ? (
+                {user.profile_picture || user.avatar ? (
                   <img
-                    src={user.avatar}
+                    src={user.profile_picture || user.avatar}
                     alt={user.username}
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -251,9 +251,9 @@ export const AdminPage: React.FC = () => {
                 <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
-                      {user.avatar ? (
+                      {user.profile_picture || user.avatar ? (
                         <img
-                          src={user.avatar}
+                          src={user.profile_picture || user.avatar}
                           alt={user.username}
                           className="w-10 h-10 rounded-full object-cover"
                         />

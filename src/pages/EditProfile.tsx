@@ -18,6 +18,7 @@ export const EditProfile: React.FC = () => {
   const [tagline, setTagline] = useState('');
   const [website, setWebsite] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -35,7 +36,9 @@ export const EditProfile: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selected = e.target.files[0];
+      setFile(selected);
+      setPreviewUrl(URL.createObjectURL(selected));
     }
   };
 
@@ -47,8 +50,13 @@ export const EditProfile: React.FC = () => {
       profilePicture = await toBase64(file);
     }
     try {
-      await apiService.updateProfile(user.id, { tagline, website, profilePicture });
-      updateProfile({ tagline, website, avatar: profilePicture ? '' : undefined });
+      const result = await apiService.updateProfile(user.id, { tagline, website, profilePicture });
+      updateProfile({
+        tagline,
+        website,
+        avatar: result.profilePicture ?? user.avatar,
+        profile_picture: result.profilePicture ?? user.profile_picture,
+      });
       navigate(`/profile/${user.username}`);
     } catch (err) {
       console.error('Failed to update profile', err);
@@ -56,21 +64,26 @@ export const EditProfile: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-xl">
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-lg shadow">
-        <div>
-          <label className="block mb-1 font-medium">Profile Picture</label>
-          <input type="file" accept="image/png, image/jpeg, image/gif" onChange={handleFileChange} />
+    <div className="edit-profile-card bg-slate-800 p-6 rounded-lg shadow-md max-w-md mx-auto mt-8 text-white">
+      <h2 className="text-xl font-semibold mb-4">Edit Your Profile</h2>
+
+      {previewUrl && (
+        <div className="w-24 h-24 rounded-full overflow-hidden mb-4">
+          <img src={previewUrl} className="object-cover w-full h-full" alt="Profile preview" />
         </div>
-        <div>
-          <label className="block mb-1 font-medium">Tagline</label>
-          <input type="text" maxLength={100} value={tagline} onChange={e => setTagline(e.target.value)} className="w-full border px-3 py-2 rounded" />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Website</label>
-          <input type="url" value={website} onChange={e => setWebsite(e.target.value)} className="w-full border px-3 py-2 rounded" />
-        </div>
-        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded">Save Changes</button>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <label className="block mb-2 font-medium">Profile Picture</label>
+        <input type="file" accept="image/*" onChange={handleFileChange} className="mb-4 bg-slate-700 p-2 rounded" />
+
+        <label className="block mb-2 font-medium">Tagline</label>
+        <input type="text" maxLength={100} value={tagline} onChange={e => setTagline(e.target.value)} className="w-full p-2 mb-4 rounded bg-slate-700" />
+
+        <label className="block mb-2 font-medium">Website</label>
+        <input type="url" value={website} onChange={e => setWebsite(e.target.value)} className="w-full p-2 mb-6 rounded bg-slate-700" />
+
+        <button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white p-2 rounded">Save Changes</button>
       </form>
     </div>
   );

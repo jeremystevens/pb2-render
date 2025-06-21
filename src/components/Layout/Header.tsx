@@ -100,9 +100,9 @@ export const Header: React.FC = () => {
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="flex items-center space-x-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
-                    {user?.avatar ? (
+                    {user?.profile_picture || user?.avatar ? (
                       <img
-                        src={user.avatar}
+                        src={user.profile_picture || user.avatar}
                         alt={user.username}
                         className="h-8 w-8 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600"
                       />
