@@ -107,14 +107,20 @@ class ApiService {
         console.warn(`⏰ Request timeout after ${API_TIMEOUT}ms for: ${url}`);
       }, API_TIMEOUT);
       
+      const isFormData = options.body instanceof FormData;
+      const headers = {
+        ...this.getAuthHeaders(),
+        ...options.headers
+      } as Record<string, any>;
+      if (isFormData) {
+        delete headers['Content-Type'];
+      }
+
       const response = await fetch(url, {
         credentials: 'include',
         ...options,
         signal: controller.signal,
-        headers: {
-          ...this.getAuthHeaders(),
-          ...options.headers
-        }
+        headers
       });
       
       clearTimeout(timeoutId);
@@ -320,10 +326,10 @@ class ApiService {
     return this.makeRequest(`${API_BASE_URL}/users/${userId}/profile-edit`);
   }
 
-  async updateProfile(userId: string, data: { tagline: string; website: string; profilePicture?: string }) {
+  async updateProfile(userId: string, data: FormData) {
     return this.makeRequest(`${API_BASE_URL}/users/${userId}/profile`, {
       method: 'PUT',
-      body: JSON.stringify(data)
+      body: data
     });
   }
 

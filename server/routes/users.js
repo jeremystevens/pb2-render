@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../database/connection.js';
 import { authenticateToken } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -196,7 +197,7 @@ router.get('/:userId/profile-edit', authenticateToken, async (req, res) => {
 });
 
 // Update profile
-router.put('/:userId/profile', authenticateToken, async (req, res) => {
+router.put('/:userId/profile', authenticateToken, upload.single('avatar'), async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -204,7 +205,7 @@ router.put('/:userId/profile', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { tagline, website, profilePicture } = req.body;
+    const { tagline, website } = req.body;
 
     if (tagline && tagline.length > 100) {
       return res.status(400).json({ error: 'Tagline must be under 100 characters' });
@@ -219,24 +220,8 @@ router.put('/:userId/profile', authenticateToken, async (req, res) => {
     }
 
     let profilePath;
-    if (profilePicture) {
-      const match = profilePicture.match(/^data:(image\/(png|jpeg|gif));base64,(.+)$/);
-      if (!match) {
-        return res.status(400).json({ error: 'Invalid image data' });
-      }
-
-      const ext = match[2] === 'jpeg' ? 'jpg' : match[2];
-      const buffer = Buffer.from(match[3], 'base64');
-      const { join, dirname } = await import('path');
-      const { fileURLToPath } = await import('url');
-      const { promises: fs } = await import('fs');
-      const __dirname = dirname(fileURLToPath(import.meta.url));
-      const uploadDir = join(__dirname, '../uploads/avatars');
-      await fs.mkdir(uploadDir, { recursive: true });
-      const filename = `user_${userId}_${Date.now()}.${ext}`;
-      const fullPath = join(uploadDir, filename);
-      await fs.writeFile(fullPath, buffer);
-      profilePath = `/uploads/avatars/${filename}`;
+    if (req.file) {
+      profilePath = `/uploads/avatars/${req.file.filename}`;
     }
 
     const current = await pool.query('SELECT profile_picture FROM users WHERE id = $1', [userId]);
