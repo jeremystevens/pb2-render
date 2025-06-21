@@ -13,11 +13,13 @@ const storage = multer.diskStorage({
 });
 
 function fileFilter(req, file, cb) {
-  const allowed = /\.(jpg|jpeg|png|gif)$/i;
-  if (allowed.test(file.originalname)) {
+  const allowedExtensions = /\.(jpg|jpeg|png|gif)$/i;
+  const allowedMimetypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+  if (allowedExtensions.test(file.originalname) && allowedMimetypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only JPG, PNG, or GIF files are allowed'));
+    cb(new Error('Only JPG, PNG, or GIF files with valid mimetypes are allowed'));
   }
 }
 
