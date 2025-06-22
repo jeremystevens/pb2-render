@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 
 export const SettingsPage: React.FC = () => {
@@ -27,10 +28,15 @@ export const SettingsPage: React.FC = () => {
   const [profileData, setProfileData] = useState({
     username: user?.username || '',
     email: user?.email || '',
-    bio: user?.bio || '',
+    bio: user?.bio || user?.tagline || '',
     website: user?.website || '',
-    location: user?.location || ''
+    location: user?.location || '',
+    profilePicture: user?.profilePicture || user?.profile_picture || user?.avatar || ''
   });
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -47,9 +53,67 @@ export const SettingsPage: React.FC = () => {
     { id: 'data', label: 'Data', icon: Database }
   ];
 
-  const handleProfileSave = () => {
-    updateProfile(profileData);
-    toast.success('Profile updated successfully!');
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      try {
+        const basePicture =
+          user.profilePicture || user.profile_picture || user.avatar || '';
+        const data = await apiService.getEditableProfile(user.id);
+        setProfileData(prev => ({
+          ...prev,
+          bio: data.bio || data.tagline || '',
+          website: data.website || '',
+          location: data.location || '',
+          profilePicture: data.profilePicture || basePicture
+        }));
+        setPreviewUrl(data.profilePicture || basePicture);
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      }
+    };
+    loadProfile();
+  }, [user]);
+
+  const handleProfileSave = async () => {
+    if (!user) return;
+    const formData = new FormData();
+    formData.append('bio', profileData.bio);
+    formData.append('website', profileData.website);
+    formData.append('location', profileData.location);
+    if (avatarFile) {
+      formData.append('avatar', avatarFile);
+    }
+
+    try {
+      const result = await apiService.updateProfile(user.id, formData);
+      updateProfile({
+        bio: result.bio,
+        tagline: result.bio,
+        website: result.website,
+        location: result.location,
+        avatar: result.profilePicture ?? user.avatar,
+        profile_picture: result.profilePicture ?? user.profile_picture,
+        profilePicture: result.profilePicture ?? user.profilePicture
+      });
+      setAvatarFile(null);
+      toast.success('Profile updated successfully!');
+    } catch (err) {
+      console.error('Failed to update profile', err);
+      toast.error('Failed to update profile');
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selected = e.target.files[0];
+      setAvatarFile(selected);
+      setPreviewUrl(URL.createObjectURL(selected));
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   const handlePasswordChange = () => {
@@ -86,13 +150,24 @@ export const SettingsPage: React.FC = () => {
                 <div className="flex items-center space-x-6">
                   <div className="relative">
                     <img
-                      src={user?.profilePicture || user?.profile_picture || user?.avatar || '/default-avatar.png'}
+                      src={previewUrl || profileData.profilePicture || '/default-avatar.png'}
                       alt={user?.username}
                       className="w-20 h-20 rounded-full object-cover"
                     />
-                    <button className="absolute bottom-0 right-0 p-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <button
+                      type="button"
+                      onClick={triggerFileInput}
+                      className="absolute bottom-0 right-0 p-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
                       <Upload className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                     </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
                   </div>
                   
                   <div>
@@ -113,8 +188,8 @@ export const SettingsPage: React.FC = () => {
                     <input
                       type="text"
                       value={profileData.username}
-                      onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      readOnly
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg opacity-70 cursor-not-allowed"
                     />
                   </div>
 
@@ -125,8 +200,8 @@ export const SettingsPage: React.FC = () => {
                     <input
                       type="email"
                       value={profileData.email}
-                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      readOnly
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg opacity-70 cursor-not-allowed"
                     />
                   </div>
                 </div>
