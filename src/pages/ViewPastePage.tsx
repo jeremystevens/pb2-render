@@ -121,7 +121,18 @@ const ViewPastePage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    Prism.highlightAll();
+    let timeoutId: NodeJS.Timeout | null = null;
+    if (paste && paste.content) {
+      // Use setTimeout to ensure DOM is updated before highlighting
+      timeoutId = setTimeout(() => {
+        Prism.highlightAll();
+      }, 100);
+    }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [paste]);
 
   const fetchPaste = async () => {
@@ -147,7 +158,7 @@ const ViewPastePage: React.FC = () => {
 
   const handleCopy = async () => {
     if (!paste) return;
-    
+
     try {
       await navigator.clipboard.writeText(paste.content);
       setCopied(true);
@@ -160,7 +171,7 @@ const ViewPastePage: React.FC = () => {
 
   const handleDownload = async () => {
     if (!paste) return;
-    
+
     try {
       const blob = await apiService.downloadPaste(paste.id.toString());
       const url = URL.createObjectURL(blob);
@@ -179,7 +190,7 @@ const ViewPastePage: React.FC = () => {
 
   const handleShare = async () => {
     const url = window.location.href;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -313,7 +324,7 @@ const ViewPastePage: React.FC = () => {
                   <Flame className="h-5 w-5 text-red-600 dark:text-red-400" />
                 )}
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
@@ -324,17 +335,17 @@ const ViewPastePage: React.FC = () => {
                     {paste.author_username}
                   </button>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   <span>{format(new Date(paste.created_at), 'MMM d, yyyy')}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
                   <span>{paste.view_count} views</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <Code2 className="h-4 w-4" />
                   <span>{getLanguageDisplayName(paste.syntax_language)}</span>
@@ -371,7 +382,7 @@ const ViewPastePage: React.FC = () => {
                 <Copy className={`h-4 w-4 ${copied ? 'text-green-600' : ''}`} />
                 {copied ? 'Copied!' : 'Copy'}
               </button>
-              
+
               <button
                 onClick={handleDownload}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
@@ -379,7 +390,7 @@ const ViewPastePage: React.FC = () => {
                 <Download className="h-4 w-4" />
                 Download
               </button>
-              
+
               <button
                 onClick={handleShare}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -410,7 +421,7 @@ const ViewPastePage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="overflow-x-auto">
                 <pre className={`line-numbers language-${sanitizeLanguage(paste.syntax_language)}`}>
                   <code className={`language-${sanitizeLanguage(paste.syntax_language)}`}>
