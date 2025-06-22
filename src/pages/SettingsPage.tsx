@@ -108,6 +108,9 @@ export const SettingsPage: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
       setAvatarFile(selected);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
       setPreviewUrl(URL.createObjectURL(selected));
     }
   };
