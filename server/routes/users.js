@@ -204,7 +204,7 @@ router.get('/:userId/profile-edit', authenticateToken, async (req, res) => {
     }
 
     const result = await pool.query(
-      'SELECT tagline, website, profile_picture FROM users WHERE id = $1',
+      'SELECT bio, tagline, website, location, profile_picture FROM users WHERE id = $1',
       [userId]
     );
 
@@ -214,8 +214,10 @@ router.get('/:userId/profile-edit', authenticateToken, async (req, res) => {
 
     const user = result.rows[0];
     res.json({
+      bio: user.bio || user.tagline || '',
       tagline: user.tagline || '',
       website: user.website || '',
+      location: user.location || '',
       profilePicture: user.profile_picture || ''
     });
   } catch (error) {
@@ -233,10 +235,11 @@ router.put('/:userId/profile', authenticateToken, upload.single('avatar'), async
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { tagline, website } = req.body;
+    const { bio, tagline, website, location } = req.body;
+    const bioText = bio || tagline;
 
-    if (tagline && tagline.length > 100) {
-      return res.status(400).json({ error: 'Tagline must be under 100 characters' });
+    if (bioText && bioText.length > 100) {
+      return res.status(400).json({ error: 'Bio must be under 100 characters' });
     }
 
     if (website) {
@@ -256,11 +259,11 @@ router.put('/:userId/profile', authenticateToken, upload.single('avatar'), async
     const finalPath = profilePath || current.rows[0]?.profile_picture || null;
 
     await pool.query(
-      'UPDATE users SET tagline = $1, website = $2, profile_picture = $3, updated_at = NOW() WHERE id = $4',
-      [tagline || null, website || null, finalPath, userId]
+      'UPDATE users SET bio = $1, tagline = $1, website = $2, location = $3, profile_picture = $4, updated_at = NOW() WHERE id = $5',
+      [bioText || null, website || null, location || null, finalPath, userId]
     );
 
-    res.json({ tagline, website, profilePicture: finalPath });
+    res.json({ bio: bioText || '', website, location, profilePicture: finalPath });
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ error: 'Failed to update profile' });
