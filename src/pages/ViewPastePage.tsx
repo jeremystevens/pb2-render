@@ -23,6 +23,56 @@ import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.js';
+
+// Ensure line numbers CSS is properly loaded
+const lineNumbersCSS = `
+  pre.line-numbers {
+    position: relative;
+    padding-left: 3.8em;
+    counter-reset: linenumber;
+  }
+  
+  pre.line-numbers > code {
+    position: relative;
+    white-space: inherit;
+  }
+  
+  .line-numbers .line-numbers-rows {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    font-size: 100%;
+    left: -3.8em;
+    width: 3em;
+    letter-spacing: -1px;
+    border-right: 1px solid #999;
+    user-select: none;
+  }
+  
+  .line-numbers-rows > span {
+    display: block;
+    counter-increment: linenumber;
+  }
+  
+  .line-numbers-rows > span:before {
+    content: counter(linenumber);
+    color: #999;
+    display: block;
+    padding-right: 0.8em;
+    text-align: right;
+  }
+`;
+
+// Inject CSS if it doesn't exist
+if (typeof document !== 'undefined') {
+  const styleId = 'prism-line-numbers-fix';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = lineNumbersCSS;
+    document.head.appendChild(style);
+  }
+}
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-python';
@@ -121,18 +171,36 @@ const ViewPastePage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
     if (paste && paste.content) {
-      // Use setTimeout to ensure DOM is updated before highlighting
-      timeoutId = setTimeout(() => {
+      // Force re-highlight with multiple attempts to ensure it works
+      const highlightCode = () => {
+        // Remove any existing highlighting first
+        const codeElements = document.querySelectorAll('pre[class*="language-"] code');
+        codeElements.forEach(el => {
+          el.classList.remove('language-highlighted');
+        });
+        
+        // Force Prism to re-highlight everything
         Prism.highlightAll();
-      }, 100);
+        
+        // Also manually highlight if needed
+        setTimeout(() => {
+          const preElements = document.querySelectorAll('pre[class*="language-"]');
+          preElements.forEach(pre => {
+            const code = pre.querySelector('code');
+            if (code && !code.classList.contains('language-highlighted')) {
+              Prism.highlightElement(code);
+              code.classList.add('language-highlighted');
+            }
+          });
+        }, 50);
+      };
+
+      // Multiple attempts to ensure highlighting works
+      setTimeout(highlightCode, 0);
+      setTimeout(highlightCode, 100);
+      setTimeout(highlightCode, 300);
     }
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
   }, [paste]);
 
   const fetchPaste = async () => {
@@ -423,7 +491,18 @@ const ViewPastePage: React.FC = () => {
               </div>
 
               <div className="overflow-x-auto">
-                <pre className={`line-numbers language-${sanitizeLanguage(paste.syntax_language)}`}>
+                <pre 
+                  className={`line-numbers language-${sanitizeLanguage(paste.syntax_language)}`}
+                  style={{ 
+                    margin: 0, 
+                    padding: '1rem',
+                    backgroundColor: '#2d3748',
+                    color: '#e2e8f0',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    borderRadius: '0 0 0.5rem 0.5rem'
+                  }}
+                >
                   <code className={`language-${sanitizeLanguage(paste.syntax_language)}`}>
                     {paste.content}
                   </code>
