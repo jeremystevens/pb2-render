@@ -337,6 +337,13 @@ class ApiService {
     });
   }
 
+  async updatePassword(userId: string, data: { currentPassword: string; newPassword: string }) {
+    return this.makeRequest(`${API_BASE_URL}/users/${userId}/password`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
   async getAchievements(userId?: string) {
     const query = userId ? `?userId=${userId}` : '';
     return this.makeRequest(`${API_BASE_URL}/achievements${query}`);

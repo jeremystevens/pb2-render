@@ -1,4 +1,5 @@
 import express from 'express';
+import bcrypt from 'bcrypt';
 import pool from '../database/connection.js';
 import { authenticateToken } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -267,6 +268,64 @@ router.put('/:userId/profile', authenticateToken, upload.single('avatar'), async
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Update user password
+router.put('/:userId/password', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const numericUserId = Number(userId);
+    if (!Number.isInteger(numericUserId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    if (numericUserId !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: 'Current and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    const result = await pool.query(
+      'SELECT password_hash FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const valid = await bcrypt.compare(
+      currentPassword,
+      result.rows[0].password_hash
+    );
+
+    if (!valid) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [hashed, userId]
+    );
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ error: 'Failed to update password' });
   }
 });
 
