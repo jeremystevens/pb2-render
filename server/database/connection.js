@@ -51,7 +51,8 @@ export async function initializeDatabase() {
         is_admin BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        preferences JSONB DEFAULT '{}'::jsonb
+        preferences JSONB DEFAULT '{}'::jsonb,
+        allow_messages BOOLEAN DEFAULT TRUE
       )
     `);
 
@@ -64,6 +65,9 @@ export async function initializeDatabase() {
     );
     await client.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb`
+    );
+    await client.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS allow_messages BOOLEAN DEFAULT TRUE`
     );
 
     // Create pastes table - Modified to allow NULL author_id for anonymous pastes

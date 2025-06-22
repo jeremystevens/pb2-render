@@ -60,7 +60,13 @@ router.post('/register', async (req, res) => {
         projectCount: 0,
         tagline: user.tagline,
         avatar: user.profile_picture,
-        profilePicture: user.profile_picture
+        profilePicture: user.profile_picture,
+        privacy: {
+          profileVisibility: 'public',
+          showPasteCount: true,
+          showPublicPastes: true,
+          allowMessages: true
+        }
       },
       token
     });
@@ -82,8 +88,12 @@ router.post('/login', async (req, res) => {
     
     // Find user
     const result = await pool.query(`
-      SELECT 
+      SELECT
         u.*,
+        u.preferences->>'profileVisibility' AS profile_visibility,
+        u.preferences->>'showPasteCount' AS show_paste_count,
+        u.preferences->>'showPublicPastes' AS show_public_pastes,
+        u.allow_messages,
         COUNT(DISTINCT p.id) as paste_count,
         COUNT(DISTINCT pr.id) as project_count
       FROM users u
@@ -129,7 +139,13 @@ router.post('/login', async (req, res) => {
         followers: 0, // TODO: Implement followers
         following: 0, // TODO: Implement following
         pasteCount: parseInt(user.paste_count),
-        projectCount: parseInt(user.project_count)
+        projectCount: parseInt(user.project_count),
+        privacy: {
+          profileVisibility: user.profile_visibility || 'public',
+          showPasteCount: user.show_paste_count !== 'false',
+          showPublicPastes: user.show_public_pastes !== 'false',
+          allowMessages: user.allow_messages !== false && user.allow_messages !== 'false'
+        }
       },
       token
     });
@@ -153,8 +169,12 @@ router.get('/verify', async (req, res) => {
     
     // Get fresh user data
     const result = await pool.query(`
-      SELECT 
+      SELECT
         u.*,
+        u.preferences->>'profileVisibility' AS profile_visibility,
+        u.preferences->>'showPasteCount' AS show_paste_count,
+        u.preferences->>'showPublicPastes' AS show_public_pastes,
+        u.allow_messages,
         COUNT(DISTINCT p.id) as paste_count,
         COUNT(DISTINCT pr.id) as project_count
       FROM users u
@@ -186,7 +206,13 @@ router.get('/verify', async (req, res) => {
         followers: 0,
         following: 0,
         pasteCount: parseInt(user.paste_count),
-        projectCount: parseInt(user.project_count)
+        projectCount: parseInt(user.project_count),
+        privacy: {
+          profileVisibility: user.profile_visibility || 'public',
+          showPasteCount: user.show_paste_count !== 'false',
+          showPublicPastes: user.show_public_pastes !== 'false',
+          allowMessages: user.allow_messages !== false && user.allow_messages !== 'false'
+        }
       }
     });
     
