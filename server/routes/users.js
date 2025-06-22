@@ -12,8 +12,12 @@ router.get('/:username', async (req, res) => {
     const { username } = req.params;
     
     const result = await pool.query(`
-      SELECT 
+      SELECT
         u.*,
+        u.preferences->>'profileVisibility' AS profile_visibility,
+        u.preferences->>'showPasteCount' AS show_paste_count,
+        u.preferences->>'showPublicPastes' AS show_public_pastes,
+        u.allow_messages,
         COUNT(DISTINCT p.id) as paste_count,
         COUNT(DISTINCT pr.id) as project_count
       FROM users u
@@ -42,7 +46,13 @@ router.get('/:username', async (req, res) => {
       followers: 0, // TODO: Implement
       following: 0, // TODO: Implement
       pasteCount: parseInt(user.paste_count),
-      projectCount: parseInt(user.project_count)
+      projectCount: parseInt(user.project_count),
+      privacy: {
+        profileVisibility: user.profile_visibility || 'public',
+        showPasteCount: user.show_paste_count !== 'false',
+        showPublicPastes: user.show_public_pastes !== 'false',
+        allowMessages: user.allow_messages !== false && user.allow_messages !== 'false'
+      }
     });
     
   } catch (error) {
@@ -372,6 +382,79 @@ router.put('/:userId/notification-preferences', authenticateToken, async (req, r
   } catch (error) {
     console.error('Error updating notification preferences:', error);
     res.status(500).json({ error: 'Failed to update preferences' });
+  }
+});
+
+// Get privacy settings
+router.get('/:userId/privacy-settings', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (parseInt(userId) !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const result = await pool.query(
+      'SELECT preferences, allow_messages FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const prefs = result.rows[0].preferences || {};
+
+    res.json({
+      profileVisibility: prefs.profileVisibility || 'public',
+      showPasteCount: prefs.showPasteCount !== false,
+      showPublicPastes: prefs.showPublicPastes !== false,
+      allowMessages: result.rows[0].allow_messages !== false && result.rows[0].allow_messages !== 'false'
+    });
+  } catch (error) {
+    console.error('Error fetching privacy settings:', error);
+    res.status(500).json({ error: 'Failed to fetch privacy settings' });
+  }
+});
+
+// Update privacy settings
+router.patch('/:userId/privacy-settings', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (parseInt(userId) !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { profileVisibility, showPasteCount, showPublicPastes, allowMessages } = req.body;
+
+    const result = await pool.query('SELECT preferences FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const prefs = result.rows[0].preferences || {};
+    const newPrefs = {
+      ...prefs,
+      profileVisibility: profileVisibility || prefs.profileVisibility || 'public',
+      showPasteCount: showPasteCount !== undefined ? !!showPasteCount : prefs.showPasteCount !== false,
+      showPublicPastes: showPublicPastes !== undefined ? !!showPublicPastes : prefs.showPublicPastes !== false
+    };
+
+    await pool.query(
+      'UPDATE users SET preferences = $1, allow_messages = $2, updated_at = NOW() WHERE id = $3',
+      [newPrefs, allowMessages !== undefined ? !!allowMessages : true, userId]
+    );
+
+    res.json({
+      profileVisibility: newPrefs.profileVisibility,
+      showPasteCount: newPrefs.showPasteCount,
+      showPublicPastes: newPrefs.showPublicPastes,
+      allowMessages: allowMessages !== undefined ? !!allowMessages : true
+    });
+  } catch (error) {
+    console.error('Error updating privacy settings:', error);
+    res.status(500).json({ error: 'Failed to update privacy settings' });
   }
 });
 

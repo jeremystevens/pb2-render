@@ -17,6 +17,7 @@ import { useThemeStore } from '../store/themeStore';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 import NotificationPreferences, { NotificationPrefs } from '../components/Settings/NotificationPreferences';
+import type { PrivacySettings } from '../types';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateProfile } = useAuthStore();
@@ -49,6 +50,13 @@ export const SettingsPage: React.FC = () => {
     emailNotifications: false,
     pushNotifications: false,
     weeklySummary: false
+  });
+
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
+    profileVisibility: 'public',
+    showPasteCount: true,
+    showPublicPastes: true,
+    allowMessages: true
   });
 
   const tabs = [
@@ -97,6 +105,24 @@ export const SettingsPage: React.FC = () => {
       }
     };
     loadPrefs();
+  }, [user, activeTab]);
+
+  useEffect(() => {
+    const loadPrivacy = async () => {
+      if (!user || activeTab !== 'privacy') return;
+      try {
+        const data = await apiService.getPrivacySettings(user.id);
+        setPrivacySettings({
+          profileVisibility: data.profileVisibility || 'public',
+          showPasteCount: data.showPasteCount !== false,
+          showPublicPastes: data.showPublicPastes !== false,
+          allowMessages: data.allowMessages !== false
+        });
+      } catch (err) {
+        console.error('Failed to load privacy settings', err);
+      }
+    };
+    loadPrivacy();
   }, [user, activeTab]);
 
   const handleProfileSave = async () => {
@@ -187,6 +213,17 @@ export const SettingsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to update notification preferences', err);
       toast.error('Failed to update notification preferences');
+    }
+  };
+
+  const handleSavePrivacy = async () => {
+    if (!user) return;
+    try {
+      await apiService.updatePrivacySettings(user.id, privacySettings);
+      toast.success('Privacy settings updated!');
+    } catch (err) {
+      console.error('Failed to update privacy settings', err);
+      toast.error('Failed to update privacy settings');
     }
   };
 
@@ -411,6 +448,93 @@ export const SettingsPage: React.FC = () => {
                 >
                   <Save className="h-4 w-4" />
                   <span>Save Preferences</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'privacy':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                Privacy Settings
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Profile Visibility
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg"
+                    value={privacySettings.profileVisibility}
+                    onChange={(e) =>
+                      setPrivacySettings({ ...privacySettings, profileVisibility: e.target.value as 'public' | 'private' })
+                    }
+                  >
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                  </select>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    Control who can see your profile information.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="showPasteCount"
+                    type="checkbox"
+                    className="h-4 w-4 text-indigo-600"
+                    checked={privacySettings.showPasteCount}
+                    onChange={() =>
+                      setPrivacySettings({ ...privacySettings, showPasteCount: !privacySettings.showPasteCount })
+                    }
+                  />
+                  <label htmlFor="showPasteCount" className="text-sm text-slate-700 dark:text-slate-300">
+                    Show paste count on profile
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="showPublicPastes"
+                    type="checkbox"
+                    className="h-4 w-4 text-indigo-600"
+                    checked={privacySettings.showPublicPastes}
+                    onChange={() =>
+                      setPrivacySettings({ ...privacySettings, showPublicPastes: !privacySettings.showPublicPastes })
+                    }
+                  />
+                  <label htmlFor="showPublicPastes" className="text-sm text-slate-700 dark:text-slate-300">
+                    Show pastes on profile
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="allowMessages"
+                    type="checkbox"
+                    className="h-4 w-4 text-indigo-600"
+                    checked={privacySettings.allowMessages}
+                    onChange={() =>
+                      setPrivacySettings({ ...privacySettings, allowMessages: !privacySettings.allowMessages })
+                    }
+                  />
+                  <label htmlFor="allowMessages" className="text-sm text-slate-700 dark:text-slate-300">
+                    Allow other users to send me messages
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleSavePrivacy}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>Save Privacy Settings</span>
                 </button>
               </div>
             </div>

@@ -22,7 +22,7 @@ import { apiService } from '../services/api';
 const defaultAvatar = '/default-avatar.png';
 import { PasteCard } from '../components/Paste/PasteCard';
 import { ProfileSummary as ProfileSummaryComponent } from '../components/Profile/ProfileSummary';
-import { ProfileSummary, Collection } from '../types';
+import { ProfileSummary, Collection, PrivacySettings } from '../types';
 import { Achievement } from '../components/Achievements/UserAchievements';
 const UserAchievements = React.lazy(() =>
   import('../components/Achievements/UserAchievements').then(mod => ({ default: mod.UserAchievements }))
@@ -49,6 +49,7 @@ interface ProfileUser {
   following: number;
   pasteCount: number;
   projectCount: number;
+  privacy?: PrivacySettings;
 }
 
 export const ProfilePage: React.FC = () => {
@@ -108,7 +109,8 @@ export const ProfilePage: React.FC = () => {
           followers: currentUser.followers,
           following: currentUser.following,
           pasteCount: currentUser.pasteCount,
-          projectCount: currentUser.projectCount
+          projectCount: currentUser.projectCount,
+          privacy: currentUser.privacy
         });
         
         // Get user's pastes from the store (filtered by username)
@@ -153,7 +155,8 @@ export const ProfilePage: React.FC = () => {
               followers: localUser.followers,
               following: localUser.following,
               pasteCount: localUser.pasteCount,
-              projectCount: localUser.projectCount
+              projectCount: localUser.projectCount,
+              privacy: localUser.privacy
             });
             
           const filteredPastes = pastes.filter(p => p.author.username === username && p.isPublic);
@@ -191,10 +194,12 @@ export const ProfilePage: React.FC = () => {
                 <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.following}</div>
                 <div className="text-slate-600 dark:text-slate-400 text-sm">Following</div>
               </div>
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
-                <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.pasteCount}</div>
-                <div className="text-slate-600 dark:text-slate-400 text-sm">Pastes</div>
-              </div>
+              {profileUser.privacy?.showPasteCount !== false && (
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.pasteCount}</div>
+                  <div className="text-slate-600 dark:text-slate-400 text-sm">Pastes</div>
+                </div>
+              )}
               <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
                 <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{profileUser.projectCount}</div>
                 <div className="text-slate-600 dark:text-slate-400 text-sm">Projects</div>
@@ -217,7 +222,13 @@ export const ProfilePage: React.FC = () => {
         );
       case 'pastes':
       default:
-        return userPastes.length > 0 ? (
+        return profileUser.privacy?.showPublicPastes === false && !isOwnProfile ? (
+          <div className="text-center py-12">
+            <Code className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">Pastes Hidden</h3>
+            <p className="text-slate-600 dark:text-slate-400">This user has hidden their pastes.</p>
+          </div>
+        ) : userPastes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userPastes.map((paste, index) => (
               <motion.div key={paste.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
@@ -268,6 +279,21 @@ export const ProfilePage: React.FC = () => {
             >
               Go Back
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileUser.privacy?.profileVisibility === 'private' && !isOwnProfile) {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center min-h-[400px] flex items-center justify-center">
+          <div>
+            <div className="text-6xl mb-4">🔒</div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              This profile is private. Only the user can view this page.
+            </h1>
           </div>
         </div>
       </div>

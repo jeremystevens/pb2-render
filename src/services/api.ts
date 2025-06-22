@@ -1,4 +1,4 @@
-import type { NotificationPrefs } from '../types';
+import type { NotificationPrefs, PrivacySettings } from '../types';
 // Enhanced API service with robust error handling and fallbacks
 const getApiBaseUrl = () => {
   // Priority order for API URL determination:
@@ -353,6 +353,17 @@ class ApiService {
     return this.makeRequest(`${API_BASE_URL}/users/${userId}/notification-preferences`, {
       method: 'PUT',
       body: JSON.stringify(prefs)
+    });
+  }
+
+  async getPrivacySettings(userId: string) {
+    return this.makeRequest(`${API_BASE_URL}/users/${userId}/privacy-settings`);
+  }
+
+  async updatePrivacySettings(userId: string, settings: PrivacySettings) {
+    return this.makeRequest(`${API_BASE_URL}/users/${userId}/privacy-settings`, {
+      method: 'PATCH',
+      body: JSON.stringify(settings)
     });
   }
 

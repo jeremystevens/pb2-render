@@ -15,12 +15,20 @@ export interface User {
   following: number;
   pasteCount: number;
   projectCount: number;
+  privacy?: PrivacySettings;
 }
 
 export interface NotificationPrefs {
   emailNotifications: boolean;
   pushNotifications: boolean;
   weeklySummary: boolean;
+}
+
+export interface PrivacySettings {
+  profileVisibility: 'public' | 'private';
+  showPasteCount: boolean;
+  showPublicPastes: boolean;
+  allowMessages: boolean;
 }
 
 export interface ProfileSummary {
