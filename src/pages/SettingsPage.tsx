@@ -188,7 +188,8 @@ export const SettingsPage: React.FC = () => {
                     <input
                       type="text"
                       value={profileData.username}
-                      readOnly
+                      disabled
+                      aria-disabled="true"
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg opacity-70 cursor-not-allowed"
                     />
                   </div>
