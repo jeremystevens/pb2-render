@@ -17,6 +17,12 @@ export interface User {
   projectCount: number;
 }
 
+export interface NotificationPrefs {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  weeklySummary: boolean;
+}
+
 export interface ProfileSummary {
   accountStatus: string;
   joinDate: string;
