@@ -89,12 +89,9 @@ export const SettingsPage: React.FC = () => {
       const result = await apiService.updateProfile(user.id, formData);
       updateProfile({
         bio: result.bio,
-        tagline: result.bio,
         website: result.website,
         location: result.location,
-        avatar: result.profilePicture ?? user.avatar,
-        profile_picture: result.profilePicture ?? user.profile_picture,
-        profilePicture: result.profilePicture ?? user.profilePicture
+        profilePicture: result.profilePicture ?? user.profilePicture ?? user.avatar
       });
       setAvatarFile(null);
       toast.success('Profile updated successfully!');
