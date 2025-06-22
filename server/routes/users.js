@@ -275,7 +275,11 @@ router.put('/:userId/profile', authenticateToken, upload.single('avatar'), async
 router.put('/:userId/password', authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
-    if (parseInt(userId) !== req.user.id && !req.user.is_admin) {
+    const numericUserId = Number(userId);
+    if (!Number.isInteger(numericUserId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    if (numericUserId !== req.user.id && !req.user.is_admin) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
