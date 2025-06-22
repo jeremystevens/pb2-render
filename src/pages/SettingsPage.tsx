@@ -116,24 +116,39 @@ export const SettingsPage: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
+    if (!user) return;
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
       return;
     }
-    
+
     if (passwordData.newPassword.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
     }
 
-    // Mock password change
-    toast.success('Password changed successfully!');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
+    try {
+      await apiService.updatePassword(user.id, {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+
+      toast.success('Password changed successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (err: unknown) {
+      console.error('Failed to change password', err);
+      const message =
+        typeof err === 'object' && err && 'error' in err
+          ? (err as { error?: string }).error
+          : undefined;
+      toast.error(message || 'Failed to change password');
+    }
   };
 
   const renderTabContent = () => {
