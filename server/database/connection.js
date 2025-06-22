@@ -50,7 +50,8 @@ export async function initializeDatabase() {
         location VARCHAR(100),
         is_admin BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        preferences JSONB DEFAULT '{}'::jsonb
       )
     `);
 
@@ -60,6 +61,9 @@ export async function initializeDatabase() {
     );
     await client.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture TEXT`
+    );
+    await client.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb`
     );
 
     // Create pastes table - Modified to allow NULL author_id for anonymous pastes

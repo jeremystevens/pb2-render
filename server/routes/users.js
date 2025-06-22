@@ -329,4 +329,50 @@ router.put('/:userId/password', authenticateToken, async (req, res) => {
   }
 });
 
+// Get notification preferences
+router.get('/:userId/preferences', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (parseInt(userId) !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const result = await pool.query('SELECT preferences FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(result.rows[0].preferences || {});
+  } catch (error) {
+    console.error('Error fetching preferences:', error);
+    res.status(500).json({ error: 'Failed to fetch preferences' });
+  }
+});
+
+// Update notification preferences
+router.put('/:userId/notification-preferences', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (parseInt(userId) !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { emailNotifications, pushNotifications, weeklySummary } = req.body;
+    const prefs = {
+      email_notifications: !!emailNotifications,
+      push_notifications: !!pushNotifications,
+      weekly_summary: !!weeklySummary
+    };
+
+    await pool.query('UPDATE users SET preferences = $1, updated_at = NOW() WHERE id = $2', [prefs, userId]);
+
+    res.json({ preferences: prefs });
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
+    res.status(500).json({ error: 'Failed to update preferences' });
+  }
+});
+
 export default router;

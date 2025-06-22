@@ -16,6 +16,7 @@ import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
+import NotificationPreferences, { NotificationPrefs } from '../components/Settings/NotificationPreferences';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateProfile } = useAuthStore();
@@ -42,6 +43,12 @@ export const SettingsPage: React.FC = () => {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
+  });
+
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>({
+    emailNotifications: false,
+    pushNotifications: false,
+    weeklySummary: false
   });
 
   const tabs = [
@@ -74,6 +81,23 @@ export const SettingsPage: React.FC = () => {
     };
     loadProfile();
   }, [user]);
+
+  useEffect(() => {
+    const loadPrefs = async () => {
+      if (!user || activeTab !== 'notifications') return;
+      try {
+        const data = await apiService.getNotificationPreferences(user.id);
+        setNotificationPrefs({
+          emailNotifications: !!data.email_notifications,
+          pushNotifications: !!data.push_notifications,
+          weeklySummary: !!data.weekly_summary
+        });
+      } catch (err) {
+        console.error('Failed to load notification preferences', err);
+      }
+    };
+    loadPrefs();
+  }, [user, activeTab]);
 
   const handleProfileSave = async () => {
     if (!user) return;
@@ -148,6 +172,21 @@ export const SettingsPage: React.FC = () => {
           ? (err as { error?: string }).error
           : undefined;
       toast.error(message || 'Failed to change password');
+    }
+  };
+
+  const handleSaveNotificationPrefs = async () => {
+    if (!user) return;
+    try {
+      await apiService.updateNotificationPreferences(user.id, {
+        emailNotifications: notificationPrefs.emailNotifications,
+        pushNotifications: notificationPrefs.pushNotifications,
+        weeklySummary: notificationPrefs.weeklySummary
+      });
+      toast.success('Notification preferences updated!');
+    } catch (err) {
+      console.error('Failed to update notification preferences', err);
+      toast.error('Failed to update notification preferences');
     }
   };
 
@@ -348,6 +387,30 @@ export const SettingsPage: React.FC = () => {
                 >
                   <Lock className="h-4 w-4" />
                   <span>Update Password</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                Notification Preferences
+              </h3>
+              <NotificationPreferences
+                prefs={notificationPrefs}
+                onChange={setNotificationPrefs}
+              />
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleSaveNotificationPrefs}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>Save Preferences</span>
                 </button>
               </div>
             </div>

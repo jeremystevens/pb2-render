@@ -1,3 +1,4 @@
+import type { NotificationPrefs } from '../types';
 // Enhanced API service with robust error handling and fallbacks
 const getApiBaseUrl = () => {
   // Priority order for API URL determination:
@@ -341,6 +342,17 @@ class ApiService {
     return this.makeRequest(`${API_BASE_URL}/users/${userId}/password`, {
       method: 'PUT',
       body: JSON.stringify(data)
+    });
+  }
+
+  async getNotificationPreferences(userId: string) {
+    return this.makeRequest(`${API_BASE_URL}/users/${userId}/preferences`);
+  }
+
+  async updateNotificationPreferences(userId: string, prefs: NotificationPrefs) {
+    return this.makeRequest(`${API_BASE_URL}/users/${userId}/notification-preferences`, {
+      method: 'PUT',
+      body: JSON.stringify(prefs)
     });
   }
 
