@@ -120,11 +120,9 @@ const ViewPastePage: React.FC = () => {
     }
   }, [id]);
 
-  const displayContent = paste?.content || '';
-
   useEffect(() => {
     Prism.highlightAll();
-  }, [displayContent]);
+  }, [paste]);
 
   const fetchPaste = async () => {
     try {
@@ -414,9 +412,9 @@ const ViewPastePage: React.FC = () => {
               </div>
               
               <div className="overflow-x-auto">
-                <pre className={`!bg-transparent !m-0 !p-4 line-numbers language-${sanitizeLanguage(paste.syntax_language)}`}> 
+                <pre className={`line-numbers language-${sanitizeLanguage(paste.syntax_language)}`}>
                   <code className={`language-${sanitizeLanguage(paste.syntax_language)}`}>
-                    {displayContent}
+                    {paste.content}
                   </code>
                 </pre>
               </div>
