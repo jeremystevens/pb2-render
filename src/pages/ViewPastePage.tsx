@@ -121,12 +121,18 @@ const ViewPastePage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
     if (paste && paste.content) {
       // Use setTimeout to ensure DOM is updated before highlighting
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         Prism.highlightAll();
       }, 100);
     }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [paste]);
 
   const fetchPaste = async () => {
