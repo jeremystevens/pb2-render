@@ -409,7 +409,7 @@ router.get('/:userId/privacy-settings', authenticateToken, async (req, res) => {
       profileVisibility: prefs.profileVisibility || 'public',
       showPasteCount: prefs.showPasteCount !== false,
       showPublicPastes: prefs.showPublicPastes !== false,
-      allowMessages: result.rows[0].allow_messages !== false
+      allowMessages: result.rows[0].allow_messages !== false && result.rows[0].allow_messages !== 'false'
     });
   } catch (error) {
     console.error('Error fetching privacy settings:', error);
